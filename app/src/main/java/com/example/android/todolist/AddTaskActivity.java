@@ -24,7 +24,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
+import com.example.android.todolist.database.AppDatabase;
 import com.example.android.todolist.database.TaskEntry;
+
+import java.util.Date;
 
 
 public class AddTaskActivity extends AppCompatActivity {
@@ -47,6 +50,7 @@ public class AddTaskActivity extends AppCompatActivity {
     Button mButton;
 
     private int mTaskId = DEFAULT_TASK_ID;
+    private AppDatabase appDatabase;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +69,7 @@ public class AddTaskActivity extends AppCompatActivity {
                 // populate the UI
             }
         }
+        appDatabase = AppDatabase.getInstance(this);
     }
 
     @Override
@@ -104,6 +109,17 @@ public class AddTaskActivity extends AppCompatActivity {
      */
     public void onSaveButtonClicked() {
         // Not yet implemented
+        String description = mEditText.getText().toString();
+
+        int periority = getPriorityFromViews();
+
+        Date date = new Date();
+
+        TaskEntry taskEntry = new TaskEntry(description, periority, date);
+
+        appDatabase.taskDao().insertTask(taskEntry);
+
+        finish();
     }
 
     /**

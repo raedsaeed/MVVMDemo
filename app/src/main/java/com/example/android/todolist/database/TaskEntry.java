@@ -16,6 +16,7 @@ public class TaskEntry {
     private int id;
     private String description;
     private int priority;
+    @ColumnInfo(name = "updated_at")
     private Date updatedAt;
 
     // COMPLETED (4) Use the Ignore annotation so Room knows that it has to use the other constructor instead
