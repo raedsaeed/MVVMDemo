@@ -115,11 +115,17 @@ public class AddTaskActivity extends AppCompatActivity {
 
         Date date = new Date();
 
-        TaskEntry taskEntry = new TaskEntry(description, periority, date);
+        final TaskEntry taskEntry = new TaskEntry(description, periority, date);
 
-        appDatabase.taskDao().insertTask(taskEntry);
+        AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                appDatabase.taskDao().insertTask(taskEntry);
 
-        finish();
+                finish();
+            }
+        });
+
     }
 
     /**
