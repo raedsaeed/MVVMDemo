@@ -75,8 +75,18 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
 
             // Called when a user swipes left or right on a ViewHolder
             @Override
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+            public void onSwiped(final RecyclerView.ViewHolder viewHolder, int swipeDir) {
                 // Here is where you'll implement swipe to delete
+                AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        int position = viewHolder.getAdapterPosition();
+                        List<TaskEntry> taskEntries = mAdapter.getTasks();
+
+                        appDatabase.taskDao().deleteTask(taskEntries.get(position));
+                        retrieveTasks();
+                    }
+                });
             }
         }).attachToRecyclerView(mRecyclerView);
 
@@ -102,10 +112,20 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
     @Override
     protected void onResume() {
         super.onResume();
+        retrieveTasks();
+
+    }
+
+    @Override
+    public void onItemClickListener(int itemId) {
+        // Launch AddTaskActivity adding the itemId as an extra in the intent
+    }
+
+    public void retrieveTasks() {
         AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
             @Override
             public void run() {
-               final List<TaskEntry> tasks = appDatabase.taskDao().loadAllTasks();
+                final List<TaskEntry> tasks = appDatabase.taskDao().loadAllTasks();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -114,11 +134,5 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
                 });
             }
         });
-
-    }
-
-    @Override
-    public void onItemClickListener(int itemId) {
-        // Launch AddTaskActivity adding the itemId as an extra in the intent
     }
 }
