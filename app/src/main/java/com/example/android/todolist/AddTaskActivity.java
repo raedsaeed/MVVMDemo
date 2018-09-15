@@ -67,6 +67,21 @@ public class AddTaskActivity extends AppCompatActivity {
             mButton.setText(R.string.update_button);
             if (mTaskId == DEFAULT_TASK_ID) {
                 // populate the UI
+                mTaskId = intent.getIntExtra(EXTRA_TASK_ID, DEFAULT_TASK_ID);
+
+                AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                      final TaskEntry taskEntry = appDatabase.taskDao().loadTaskById(mTaskId);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                populateUI(taskEntry);
+                            }
+                        });
+
+                    }
+                });
             }
         }
         appDatabase = AppDatabase.getInstance(this);
@@ -100,7 +115,12 @@ public class AddTaskActivity extends AppCompatActivity {
      * @param task the taskEntry to populate the UI
      */
     private void populateUI(TaskEntry task) {
-
+        if (task == null) {
+            return;
+        }
+        // COMPLETED (8) use the variable task to populate the UI
+        mEditText.setText(task.getDescription());
+        setPriorityInViews(task.getPriority());
     }
 
     /**
@@ -120,12 +140,17 @@ public class AddTaskActivity extends AppCompatActivity {
         AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
             @Override
             public void run() {
-                appDatabase.taskDao().insertTask(taskEntry);
-
-                finish();
+                if (mTaskId == DEFAULT_TASK_ID) {
+                    // insert new task
+                    appDatabase.taskDao().insertTask(taskEntry);
+                } else {
+                    //update task
+                    taskEntry.setId(mTaskId);
+                    appDatabase.taskDao().updateTask(taskEntry);
+                }
             }
         });
-
+        finish();
     }
 
     /**
