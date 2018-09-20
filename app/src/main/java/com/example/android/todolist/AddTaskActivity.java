@@ -16,9 +16,13 @@
 
 package com.example.android.todolist;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -57,6 +61,7 @@ public class AddTaskActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_task);
 
         initViews();
+        appDatabase = AppDatabase.getInstance(this);
 
         if (savedInstanceState != null && savedInstanceState.containsKey(INSTANCE_TASK_ID)) {
             mTaskId = savedInstanceState.getInt(INSTANCE_TASK_ID, DEFAULT_TASK_ID);
@@ -69,22 +74,18 @@ public class AddTaskActivity extends AppCompatActivity {
                 // populate the UI
                 mTaskId = intent.getIntExtra(EXTRA_TASK_ID, DEFAULT_TASK_ID);
 
-                AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
+                final LiveData<TaskEntry> task = appDatabase.taskDao().loadTaskById(mTaskId);
+                task.observe(this, new Observer<TaskEntry>() {
                     @Override
-                    public void run() {
-                      final TaskEntry taskEntry = appDatabase.taskDao().loadTaskById(mTaskId);
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                populateUI(taskEntry);
-                            }
-                        });
-
+                    public void onChanged(@Nullable TaskEntry taskEntry) {
+                        task.removeObserver(this);
+                        Log.d(TAG, "Receiving database update from LiveData");
+                        populateUI(taskEntry);
                     }
                 });
+
             }
         }
-        appDatabase = AppDatabase.getInstance(this);
     }
 
     @Override

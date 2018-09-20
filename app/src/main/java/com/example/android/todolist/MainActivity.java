@@ -16,14 +16,18 @@
 
 package com.example.android.todolist;
 
+import android.arch.lifecycle.LiveData;
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.View;
 
 import com.example.android.todolist.database.AppDatabase;
@@ -85,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
                         List<TaskEntry> taskEntries = mAdapter.getTasks();
 
                         appDatabase.taskDao().deleteTask(taskEntries.get(position));
-                        retrieveTasks();
                     }
                 });
             }
@@ -108,13 +111,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
         });
 
         appDatabase = AppDatabase.getInstance(this);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
         retrieveTasks();
-
     }
 
     @Override
@@ -126,16 +123,13 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
     }
 
     public void retrieveTasks() {
-        AppExecutors.getInstance().getDiskIO().execute(new Runnable() {
+        Log.d(TAG, "retrieveTasks: Called");
+        final LiveData <List<TaskEntry>> tasks = appDatabase.taskDao().loadAllTasks();
+        tasks.observe(this, new Observer<List<TaskEntry>>() {
             @Override
-            public void run() {
-                final List<TaskEntry> tasks = appDatabase.taskDao().loadAllTasks();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter.setTasks(tasks);
-                    }
-                });
+            public void onChanged(@Nullable List<TaskEntry> taskEntries) {
+                Log.d(TAG, "onChanged: called from liveData");
+                mAdapter.setTasks(taskEntries);
             }
         });
     }
