@@ -14,10 +14,10 @@
 * limitations under the License.
 */
 
-package com.example.android.todolist;
+package com.example.android.todolist.mainactivity;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -30,13 +30,16 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.View;
 
+import com.example.android.todolist.addtaskactivity.AddTaskActivity;
+import com.example.android.todolist.AppExecutors;
+import com.example.android.todolist.R;
 import com.example.android.todolist.database.AppDatabase;
 import com.example.android.todolist.database.TaskEntry;
 
 import java.util.List;
 
 import static android.support.v7.widget.DividerItemDecoration.VERTICAL;
-import static com.example.android.todolist.AddTaskActivity.EXTRA_TASK_ID;
+import static com.example.android.todolist.addtaskactivity.AddTaskActivity.EXTRA_TASK_ID;
 
 
 public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemClickListener {
@@ -111,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
         });
 
         appDatabase = AppDatabase.getInstance(this);
-        retrieveTasks();
+        setUpViewModel();
     }
 
     @Override
@@ -122,10 +125,9 @@ public class MainActivity extends AppCompatActivity implements TaskAdapter.ItemC
         startActivity(intent);
     }
 
-    public void retrieveTasks() {
-        Log.d(TAG, "retrieveTasks: Called");
-        final LiveData <List<TaskEntry>> tasks = appDatabase.taskDao().loadAllTasks();
-        tasks.observe(this, new Observer<List<TaskEntry>>() {
+    public void setUpViewModel() {
+        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+       viewModel.getTasks().observe(this, new Observer<List<TaskEntry>>() {
             @Override
             public void onChanged(@Nullable List<TaskEntry> taskEntries) {
                 Log.d(TAG, "onChanged: called from liveData");

@@ -14,10 +14,10 @@
 * limitations under the License.
 */
 
-package com.example.android.todolist;
+package com.example.android.todolist.addtaskactivity;
 
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -28,6 +28,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
+import com.example.android.todolist.AppExecutors;
+import com.example.android.todolist.R;
 import com.example.android.todolist.database.AppDatabase;
 import com.example.android.todolist.database.TaskEntry;
 
@@ -74,12 +76,14 @@ public class AddTaskActivity extends AppCompatActivity {
                 // populate the UI
                 mTaskId = intent.getIntExtra(EXTRA_TASK_ID, DEFAULT_TASK_ID);
 
-                final LiveData<TaskEntry> task = appDatabase.taskDao().loadTaskById(mTaskId);
-                task.observe(this, new Observer<TaskEntry>() {
+                AddTaskViewModelFactory factory = new AddTaskViewModelFactory(appDatabase, mTaskId);
+                final AddTaskViewModel viewModel = ViewModelProviders.of(this, factory).get(AddTaskViewModel.class);
+
+                viewModel.getTask().observe(this, new Observer<TaskEntry>() {
                     @Override
                     public void onChanged(@Nullable TaskEntry taskEntry) {
-                        task.removeObserver(this);
-                        Log.d(TAG, "Receiving database update from LiveData");
+                        viewModel.getTask().removeObserver(this);
+                        Log.d(TAG, "Receiving database update from ViewModel");
                         populateUI(taskEntry);
                     }
                 });
