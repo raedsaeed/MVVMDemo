@@ -23,42 +23,39 @@ import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.DividerItemDecoration.VERTICAL
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
-
 import com.example.android.todolist.AppExecutors
 import com.example.android.todolist.R
 import com.example.android.todolist.addtaskactivity.AddTaskActivity
-
-import android.support.v7.widget.DividerItemDecoration.VERTICAL
 import com.example.android.todolist.database.AppDatabase
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity(), TaskAdapter.ItemClickListener {
     // Member variables for the adapter and RecyclerView
-    private var mRecyclerView: RecyclerView? = null
-    private var mAdapter: TaskAdapter? = null
-    private var appDatabase: AppDatabase? = null
+    private lateinit var mAdapter: TaskAdapter
+    private lateinit var appDatabase: AppDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // Set the RecyclerView to its corresponding view
-        mRecyclerView = findViewById(R.id.recyclerViewTasks)
 
         // Set the layout for the RecyclerView to be a linear layout, which measures and
         // positions items within a RecyclerView into a linear list
-        mRecyclerView!!.layoutManager = LinearLayoutManager(this)
+        recyclerViewTasks.layoutManager = LinearLayoutManager(this)
 
         // Initialize the adapter and attach it to the RecyclerView
         mAdapter = TaskAdapter(this, this)
-        mRecyclerView!!.adapter = mAdapter
+        recyclerViewTasks.adapter = mAdapter
 
         val decoration = DividerItemDecoration(applicationContext, VERTICAL)
-        mRecyclerView!!.addItemDecoration(decoration)
+        recyclerViewTasks.addItemDecoration(decoration)
 
         /*
          Add a touch helper to the RecyclerView to recognize when a user swipes to delete an item.
@@ -75,12 +72,12 @@ class MainActivity : AppCompatActivity(), TaskAdapter.ItemClickListener {
                 // Here is where you'll implement swipe to delete
                 AppExecutors.instance?.diskIO?.execute {
                     val position = viewHolder.adapterPosition
-                    val taskEntries = mAdapter!!.tasks
+                    val taskEntries = mAdapter.tasks
 
-                    appDatabase!!.taskDao().deleteTask(taskEntries?.get(position))
+                    appDatabase.taskDao().deleteTask(taskEntries?.get(position))
                 }
             }
-        }).attachToRecyclerView(mRecyclerView)
+        }).attachToRecyclerView(recyclerViewTasks)
 
         /*
          Set the Floating Action Button (FAB) to its corresponding View.
@@ -95,7 +92,7 @@ class MainActivity : AppCompatActivity(), TaskAdapter.ItemClickListener {
             startActivity(addTaskIntent)
         }
 
-        appDatabase = AppDatabase.getInstance(this)
+        appDatabase = AppDatabase.getInstance(this)!!
         setUpViewModel()
     }
 
@@ -110,7 +107,7 @@ class MainActivity : AppCompatActivity(), TaskAdapter.ItemClickListener {
         val viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         viewModel.tasks.observe(this, Observer { taskEntries ->
             Log.d(TAG, "onChanged: called from liveData")
-            mAdapter!!.tasks = taskEntries
+            mAdapter.tasks = taskEntries
         })
     }
 
